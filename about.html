@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8"/>
+    <title>SIMPLE-TASKS</title>
+    <style type="text/css">
+      html{font-family: serif;}
+      code a{text-decoration: none;}
+      h1{display: inline-block; margin-bottom: 0;}
+      code{font-family: monospace;}
+      h4{display: inline-block; margin: 0; padding: 0;}
+      #symbol-index ul{list-style: none;}
+      .package li{margin-bottom: 20px;}
+      .package pre{margin: 0 0 0 10px; white-space: pre-wrap;}
+      .package .nicknames{font-weight: normal;}
+      table{margin: 20px;}
+      td{padding-bottom: 10px;}
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>simple-tasks</h1>
+      <span>1.0.0</span>
+      <p>A very simple task scheduling framework.</p>
+    </header>
+    <div id="content">
+      <article>
+        <c:documentate>
+          <span><h2>About simple-tasks</h2>
+
+<p>Recently I noticed that I seem to write a similar pattern way too often: Some form of scheduling or task management part.
+Usually this is due to the need of executing some task in a specific thread, or simply wanting to schedule something for processing in the background.</p>
+
+<h2>Basic Usage</h2>
+
+<p>Load it through ASDF or Quicklisp:</p>
+
+<pre><code>(ql:quickload :simple-tasks)
+</code></pre>
+
+<p>Before we can do anything, we need to have a manager to run tasks with. These are called <code><a href="#SIMPLE-TASKS:RUNNER">runner</a></code>s. Usually you will want a <code><a href="#SIMPLE-TASKS:QUEUED-RUNNER">queued-runner</a></code> which will use threading capabilities if the system provides them, and thus can process tasks in the background.</p>
+
+<pre><code>(<a href="http://l1sp.org/cl/defvar">defvar</a> *runner* (<a href="http://l1sp.org/cl/make-instance">make-instance</a> 'simple-tasks:queued-runner))
+</code></pre>
+
+<p>Next we'll want to start the runner, if possible in a separate thread. The standard <code><a href="#SIMPLE-TASKS:START-RUNNER">start-runner</a></code> function does not do this, as you might want to set up the thread scenario yourself, or perhaps even inject the runner into a different thread. However, for the common scenario, there's <code><a href="#SIMPLE-TASKS:MAKE-RUNNER-THREAD">make-runner-thread</a></code>.</p>
+
+<pre><code>(<a href="http://l1sp.org/cl/defvar">defvar</a> *thread* (<a href="#SIMPLE-TASKS:MAKE-RUNNER-THREAD">simple-tasks:make-runner-thread</a> *runner*))
+</code></pre>
+
+<p>Now we can finally create <code><a href="#SIMPLE-TASKS:TASK">task</a></code>s and send them off for processing! Out of the box, simple-tasks provides three classes to do remote evaluation with: <code><a href="#SIMPLE-TASKS:CALL-TASK">call-task</a></code>, <code><a href="#SIMPLE-TASKS:BLOCKING-CALL-TASK">blocking-call-task</a></code>, and <code><a href="#SIMPLE-TASKS:CALLBACK-TASK">callback-task</a></code>. However, adding your own is very easy. Just subclass <code><a href="#SIMPLE-TASKS:TASK">task</a></code> and implement <code><a href="#SIMPLE-TASKS:RUN-TASK">run-task</a></code>.</p>
+
+<pre><code>(<a href="http://l1sp.org/cl/defvar">defvar</a> *task* (<a href="http://l1sp.org/cl/make-instance">make-instance</a> 'simple-tasks:call-task :func (<a href="http://l1sp.org/cl/lambda">lambda</a> () (<a href="http://l1sp.org/cl/print">print</a> &quot;hi&quot;))))
+</code></pre>
+
+<p>Finally we need to send off the task for processing.</p>
+
+<pre><code>(<a href="#SIMPLE-TASKS:SCHEDULE-TASK">simple-tasks:schedule-task</a> *task* *runner*)
+</code></pre>
+
+<p>All <code><a href="#SIMPLE-TASKS:CALL-TASK">call-task</a></code>s also save the <code><a href="#SIMPLE-TASKS:RETURN-VALUES">return-values</a></code> of the function they're calling, so you can read that out later. Usually if you want to do so, you'll want to either block until the task is done, or delegate to a callback function. The former is made convenient through <code><a href="#SIMPLE-TASKS:WITH-BODY-AS-TASK">with-body-as-task</a></code>.</p>
+
+<pre><code>(<a href="#SIMPLE-TASKS:WITH-BODY-AS-TASK">simple-tasks:with-body-as-task</a> (*runner*)
+  (<a href="http://l1sp.org/cl/sleep">sleep</a> 1)
+  (<a href="http://l1sp.org/cl/expt">expt</a> 2 12))
+</code></pre>
+
+<p>And that's pretty much it.</p>
+
+<pre><code>(<a href="#SIMPLE-TASKS:STOP-RUNNER">simple-tasks:stop-runner</a> *runner*)
+</code></pre>
+
+<h2>Extending simple-tasks</h2>
+
+<p>If you want to add flexibility by creating your own specialised task classes, you should look at <code><a href="#SIMPLE-TASKS:TASK">task</a></code>, <code><a href="#SIMPLE-TASKS:RUN-TASK">run-task</a></code>, and <code><a href="#SIMPLE-TASKS:SCHEDULE-TASK">schedule-task</a></code>. Usually you can get away by just subclassing <code><a href="#SIMPLE-TASKS:TASK">task</a></code>, and adding a <code><a href="#SIMPLE-TASKS:RUN-TASK">run-task</a></code> method to do your calculations in. If you also need to modify the behaviour of the scheduling, adding <code>:after</code> methods to <code><a href="#SIMPLE-TASKS:SCHEDULE-TASK">schedule-task</a></code> can also be useful.</p>
+
+<p>In case that the existing runners aren't suited to your needs, adding one should also not be much of a problem. Simply subclass <code><a href="#SIMPLE-TASKS:RUNNER">runner</a></code>, and implement appropriate methods for <code><a href="#SIMPLE-TASKS:START-RUNNER">start-runner</a></code>, <code><a href="#SIMPLE-TASKS:STOP-RUNNER">stop-runner</a></code>, and <code><a href="#SIMPLE-TASKS:SCHEDULE-TASK">schedule-task</a></code>. The existing methods on <code><a href="#SIMPLE-TASKS:RUNNER">runner</a></code> will take care of keeping the <code><a href="#SIMPLE-TASKS:STATUS">status</a></code> in sync and making sure no invalid calls can be made.</p>
+</span>
+        </c:documentate>
+      </article>
+      <article>
+        
+          <h2>Copyright</h2>
+          <span>simple-tasks</span> is licensed under the <span><a href="https://tldrlegal.com/search?q=Artistic">Artistic</a></span> license.
+          
+            © <span>Nicolas Hafner &lt;shinmera@tymoon.eu&gt;</span>
+            .
+          
+          This library can be obtained on <a href="https://github.com/Shinmera/simple-tasks">https://github.com/Shinmera/simple-tasks</a>.
+        
+      </article>
+      
+        <article id="symbol-index">
+          <h2>Package Index</h2>
+          <ul><li class="package">
+              <h3>
+                <a name="SIMPLE-TASKS" href="#SIMPLE-TASKS">SIMPLE-TASKS</a>
+                <span class="nicknames">(ORG.SHIRAKUMO.SIMPLE-TASKS)</span>
+              </h3>
+              <ul><li>
+                  <a name="SIMPLE-TASKS:BLOCKING-CALL-TASK"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:BLOCKING-CALL-TASK" class="name">BLOCKING-CALL-TASK</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Task class to perform a function call once run. Blocks the scheduling thread until it is done.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:CALL-TASK"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:CALL-TASK" class="name">CALL-TASK</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Task class to perform a function call once run. Stores the return values.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:CALLBACK-TASK"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:CALLBACK-TASK" class="name">CALLBACK-TASK</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Task class to perform a function call once run and call a callback upon completion.
+The callback function is called with each return value as an argument.
+Note that the callback function is called within the runner environment
+which may be different from the scheduler environment.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:NO-THREADING-STUMP"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:NO-THREADING-STUMP" class="name">NO-THREADING-STUMP</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Stump class to stand in place of a value on systems without threading support.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:QUEUED-RUNNER"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:QUEUED-RUNNER" class="name">QUEUED-RUNNER</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Queued runner. Runs tasks in a thread if threading is available.
+Noe that START-RUNNER for this runner will block the current thread.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:RUNNER"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:RUNNER" class="name">RUNNER</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Basic runner. Runs task as soon as scheduled.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:TASK"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:TASK" class="name">TASK</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Basic task class.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:CALLBACK"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:CALLBACK" class="name">CALLBACK</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(CALLBACK-TASK)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">The function to call upon completion of the task.
+
+See CALLBACK-TASK</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:CVAR"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:CVAR" class="name">CVAR</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">The condition variable used to exchange signals.
+
+See QUEUED-RUNNER
+See BLOCKING-CALL-TASK</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:FUNC"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:FUNC" class="name">FUNC</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(CALL-TASK)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">The function the call-task calls once it is run.
+
+See CALL-TASK</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:LOCK"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:LOCK" class="name">LOCK</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">The lock used to synchronise operations with the object.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:RETURN-VALUES"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:RETURN-VALUES" class="name">RETURN-VALUES</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(CALL-TASK)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">A list of the return values that the call returned.
+
+See CALL-TASK</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:RUNNER"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:RUNNER" class="name">RUNNER</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(TASK)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">The runner the task is scheduled on.
+
+See TASK</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:STATUS"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:STATUS" class="name">STATUS</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(RUNNER/TASK)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Current status indicator of the runner/task.
+The following statuses are defined:
+
+:CREATED Object has been initialized, but not started.
+:RUNNING Object is currently executing.
+:STOPPING Runner is in the process of being stopped.
+:STOPPED Object has finished execution.
+:ERRORED Object ended execution with an error.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:CALL-AS-TASK"/>
+                  <article>
+                    <header class="function">
+                      <span class="type">function</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:CALL-AS-TASK" class="name">CALL-AS-TASK</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(FUNCTION RUNNER &amp;OPTIONAL (TASK-CLASS 'BLOCKING-CALL-TASK))</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Call function within a task, usually a BLOCKING-CALL-TASK.
+Returns the values that have been saved in the task after SCHEDULE-TASK returns.
+
+See SCHEDULE-TASK
+See BLOCKING-CALL-TASK</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:MAKE-RUNNER-THREAD"/>
+                  <article>
+                    <header class="function">
+                      <span class="type">function</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:MAKE-RUNNER-THREAD" class="name">MAKE-RUNNER-THREAD</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(RUNNER)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Make a thread to call START-RUNNER on RUNNER in.
+
+On platforms with thread support, this returns the new thread.
+On platforms without, this simply calls START-RUNNER and returns NIL.
+
+See START-RUNNER</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:QUEUE"/>
+                  <article>
+                    <header class="generic">
+                      <span class="type">generic</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:QUEUE" class="name">QUEUE</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(RUNNER)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">The current task queue of the runner.
+Do not directly push tasks to this! Use SCHEDULE-TASK instead.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:RUN-TASK"/>
+                  <article>
+                    <header class="generic">
+                      <span class="type">generic</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:RUN-TASK" class="name">RUN-TASK</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(TASK)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Run the given task object directly.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:SCHEDULE-TASK"/>
+                  <article>
+                    <header class="generic">
+                      <span class="type">generic</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:SCHEDULE-TASK" class="name">SCHEDULE-TASK</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(TASK RUNNER)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Schedule the task object for running.
+The task may or may not be run immediately, depending on the runner and given system support.
+
+See RUN-TASK</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:START-RUNNER"/>
+                  <article>
+                    <header class="generic">
+                      <span class="type">generic</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:START-RUNNER" class="name">START-RUNNER</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(RUNNER)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Start the the runner.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:STOP-RUNNER"/>
+                  <article>
+                    <header class="generic">
+                      <span class="type">generic</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:STOP-RUNNER" class="name">STOP-RUNNER</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(RUNNER)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Stop the the runner.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:WITH-BODY-AS-TASK"/>
+                  <article>
+                    <header class="macro">
+                      <span class="type">macro</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:WITH-BODY-AS-TASK" class="name">WITH-BODY-AS-TASK</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">((RUNNER &amp;OPTIONAL (TASK-CLASS ''BLOCKING-CALL-TASK)) &amp;BODY BODY)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Evaluate BODY within a task, usually a BLOCKING-CALL-TASK.
+
+See CALL-AS-TASK</pre>
+                  </article>
+                </li></ul>
+            </li></ul>
+        </article>
+      
+    </div>
+  </body>
+</html>
