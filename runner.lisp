@@ -71,14 +71,14 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   (let ((lock (lock runner))
         (cvar (cvar runner)))
     (unwind-protect
-         (progn
+         (with-simple-restart (abort "Stop the Runner ~a entirely." runner)
            (bt:acquire-lock lock)
            (loop while (eql (status runner) :running)
                  do (let ((queue (queue runner)))
                       (%set-queue (make-array 0 :adjustable T :fill-pointer 0) runner)
                       (bt:release-lock lock)
                       (loop for task across queue
-                            do (with-simple-restart (skip "Skip running ~s" task)
+                            do (with-simple-restart (skip "Skip running ~a" task)
                                  (run-task task))))
                     (bt:acquire-lock lock)
                     (when (= 0 (length (queue runner)))
