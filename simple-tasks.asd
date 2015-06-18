@@ -18,4 +18,5 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                (:file "runner")
                (:file "task")
                (:file "documentation"))
-  :depends-on (:bordeaux-threads))
+  :depends-on (:bordeaux-threads
+               :dissect))

@@ -10,6 +10,11 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   (:use #:cl)
   ;; runner.lisp
   (:export
+   #:runner-condition
+   #:runner
+   #:runner-not-started
+   #:runner-not-stopped
+   
    #:start-runner
    #:stop-runner
    #:schedule-task
@@ -25,9 +30,15 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
    #:make-runner-thread)
   ;; task.lisp
   (:export
+   #:task-condition
+   #:task
+   #:task-already-scheduled
+   #:task-errored
+   
    #:task
    #:status
    #:runner
+   #:error-environment
    
    #:call-task
    #:func

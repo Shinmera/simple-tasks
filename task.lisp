@@ -6,11 +6,24 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (in-package #:org.shirakumo.simple-tasks)
 
+(define-condition task-condition (condition)
+  ((task :initarg :task :accessor task))
+  (:default-initargs :task (error "TASK required.")))
+
+(define-condition task-already-scheduled (task-condition error) ()
+  (:report (lambda (c s) (format s "Task ~s already scheduled on ~s."
+                                 (task c) (runner (task c))))))
+
+(define-condition task-errored (task-condition warning) ()
+  (:report (lambda (c s) (format s "Task ~s errored. See the task's ERROR-ENVIRONMENT for more information."
+                                 (task c)))))
+
 (defgeneric runner (task))
 
 (defclass task ()
   ((status :initform :created :accessor status)
-   (runner :initform NIL :accessor runner)))
+   (runner :initform NIL :accessor runner)
+   (error-environment :initform NIL :accessor error-environment)))
 
 (defmethod print-object ((task task) stream)
   (print-unreadable-object (task stream :type T :identity T)
@@ -18,13 +31,13 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (defmethod schedule-task :before ((task task) runner)
   (when (runner task)
-    (error "Task ~s already enqueued on ~s!" task runner))
+    (cerror "Schedule anyway." 'task-already-scheduled :task task))
   (setf (runner task) runner))
 
 (defmethod run-task :around ((task task))
   (handler-bind ((error (lambda (err)
-                          (declare (ignore err))
-                          (setf (status task) :errored))))
+                          (setf (status task) :errored)
+                          (setf (error-environment task) (dissect:capture-environment err)))))
     (setf (status task) :running)
     (call-next-method)
     (setf (status task) :completed)))
@@ -35,9 +48,12 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (defclass call-task (task)
   ((func :initarg :func :accessor func)
-   (return-values :accessor return-values))
+   (return-values :initform NIL :accessor return-values))
   (:default-initargs
    :func (error "FUNC required.")))
+
+(defmethod return-values :around ((task call-task))
+  (apply #'values (call-next-method)))
 
 (defmethod print-object ((task call-task) stream)
   (print-unreadable-object (task stream :type T :identity T)
@@ -61,19 +77,20 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
              (bt:condition-wait (cvar task) (lock task)))))
 
 #+:thread-support
-(defmethod run-task :after ((task blocking-call-task))
-  (progn
+(defmethod run-task :around ((task blocking-call-task))
+  (unwind-protect
+       (call-next-method)
     (bt:thread-yield)
     (bt:with-lock-held ((lock task))
       (bt:condition-notify (cvar task)))))
 
 (defun call-as-task (function runner &optional (task-class 'blocking-call-task))
-  
-  (apply #'values
-         (return-values
-          (schedule-task
-           (make-instance task-class :func function)
-           runner))))
+  (let ((task (make-instance task-class :func function)))
+    (schedule-task task runner)
+    (case (status task)
+      (:completed (return-values task))
+      (:errored (warn 'task-errored :task task) (values))
+      (T task))))
 
 (defmacro with-body-as-task ((runner &optional (task-class ''blocking-call-task)) &body body)
   

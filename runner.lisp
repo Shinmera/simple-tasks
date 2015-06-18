@@ -6,6 +6,18 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (in-package #:org.shirakumo.simple-tasks)
 
+(define-condition runner-condition (condition)
+  ((runner :initarg :runner :accessor runner))
+  (:default-initargs :runner (error "RUNNER required.")))
+
+(define-condition runner-not-started (runner-condition error) ()
+  (:report (lambda (c s) (format s "Runner ~s is not started."
+                                 (runner c)))))
+
+(define-condition runner-not-stopped (runner-condition warning) ()
+  (:report (lambda (c s) (format s "Runner ~s did not stop."
+                                 (runner c)))))
+
 (defgeneric start-runner (runner))
 (defgeneric stop-runner (runner))
 (defgeneric schedule-task (task runner))
@@ -21,21 +33,21 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (defmethod start-runner :before ((runner runner))
   (when (eql (status runner) :running)
-    (error "Runner ~s is already running!" runner))
+    (cerror "Start anyway." "Runner ~s is already running!" runner))
   (setf (status runner) :running))
 
 (defmethod start-runner ((runner runner)))
 
 (defmethod stop-runner :before ((runner runner))
   (unless (eql (status runner) :running)
-    (error "Runner ~s is not running!" runner))
+    (cerror "Stop anyway." "Runner ~s is not running!" runner))
   (setf (status runner) :stopped))
 
 (defmethod stop-runner ((runner runner)))
 
 (defmethod schedule-task :before (task (runner runner))
   (unless (eql (status runner) :running)
-    (error "Cannot schedule task ~s on ~s: The runner isn't started!" task runner)))
+    (error 'runner-not-started :runner runner)))
 
 (defmethod schedule-task (task (runner runner))
   (run-task task)
@@ -84,7 +96,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
         do (if (eql (status runner) :stopped)
                (return)
                (sleep 1))
-        finally (warn "Runner did not stop on its own within five seconds!"))
+        finally (warn 'runner-not-stopped :runner runner))
   runner)
 
 #+:thread-support
