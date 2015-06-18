@@ -32,7 +32,9 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   
   (schedule-task
    "Schedule the task object for running.
-The task may or may not be run immediately, depending on the runner and given system support.
+The task may or may not be run immediately, depending on the runner and given
+system support. Tasks are guaranteed to be run in the same order as they are
+scheduled.
 
 See RUN-TASK")
   
@@ -60,7 +62,13 @@ Noe that START-RUNNER for this runner will block the current thread.")
   
   (queue
    "The current task queue of the runner.
-Do not directly push tasks to this! Use SCHEDULE-TASK instead.")
+
+Do not directly push tasks to this! Use SCHEDULE-TASK instead.
+This queue is also NOT indicative of which tasks have yet to be run,
+or which ones have. When the queued runner runs, it retains the current
+queue for processing and sets a new, empty queue on the runner. As such,
+when you look at the queue at any particular moment, tasks that are not
+in it might not have run yet.")
   
   (lock
    "The lock used to synchronise operations with the object.")
@@ -83,6 +91,9 @@ See START-RUNNER"))
 (setdocs
   ((task-condition type)
    "Condition superclass for task operation related conditions.")
+
+  (task
+   "The task related to the condition.")
 
   ((task-already-scheduled type)
    "Condition signalled when attempting to reschedule an already scheduled task.")
@@ -117,7 +128,8 @@ See CALL-TASK")
 See CALL-TASK")
   
   ((blocking-call-task type)
-   "Task class to perform a function call once run. Blocks the scheduling thread until it is done.")
+   "Task class to perform a function call once run.
+Blocks the scheduling thread until it is done.")
   
   (call-as-task
    "Call function within a task, usually a BLOCKING-CALL-TASK.

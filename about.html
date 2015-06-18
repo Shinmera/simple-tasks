@@ -122,7 +122,8 @@ Usually this is due to the need of executing some task in a specific thread, or 
                         <span class="arguments">()</span>
                       </code>
                     </header>
-                    <pre class="docstring">Task class to perform a function call once run. Blocks the scheduling thread until it is done.</pre>
+                    <pre class="docstring">Task class to perform a function call once run.
+Blocks the scheduling thread until it is done.</pre>
                   </article>
                 </li><li>
                   <a name="SIMPLE-TASKS:CALL-TASK"/>
@@ -420,7 +421,7 @@ The following statuses are defined:
                         <span class="arguments">(CONDITION)</span>
                       </code>
                     </header>
-                    <pre class="docstring"/>
+                    <pre class="docstring">The task related to the condition.</pre>
                   </article>
                 </li><li>
                   <a name="SIMPLE-TASKS:CALL-AS-TASK"/>
@@ -469,7 +470,13 @@ See START-RUNNER</pre>
                       </code>
                     </header>
                     <pre class="docstring">The current task queue of the runner.
-Do not directly push tasks to this! Use SCHEDULE-TASK instead.</pre>
+
+Do not directly push tasks to this! Use SCHEDULE-TASK instead.
+This queue is also NOT indicative of which tasks have yet to be run,
+or which ones have. When the queued runner runs, it retains the current
+queue for processing and sets a new, empty queue on the runner. As such,
+when you look at the queue at any particular moment, tasks that are not
+in it might not have run yet.</pre>
                   </article>
                 </li><li>
                   <a name="SIMPLE-TASKS:RUN-TASK"/>
@@ -496,7 +503,9 @@ Do not directly push tasks to this! Use SCHEDULE-TASK instead.</pre>
                       </code>
                     </header>
                     <pre class="docstring">Schedule the task object for running.
-The task may or may not be run immediately, depending on the runner and given system support.
+The task may or may not be run immediately, depending on the runner and given
+system support. Tasks are guaranteed to be run in the same order as they are
+scheduled.
 
 See RUN-TASK</pre>
                   </article>
