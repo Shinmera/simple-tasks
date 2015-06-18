@@ -65,6 +65,14 @@ Usually this is due to the need of executing some task in a specific thread, or 
   (<a href="http://l1sp.org/cl/expt">expt</a> 2 12))
 </code></pre>
 
+<p>In the case that a task encounters a failure during a run, it sets its status to <code>:errored</code> and saves the current environment. You can inspect this environment at any later point by fetching it with <code><a href="#SIMPLE-TASKS:ERROR-ENVIRONMENT">error-environment</a></code> and looking at its contents with the various functions Dissect provides. This is mostly useful in a scenario where you cannot use a debugger and thus just automatically invoke the <code><a href="http://l1sp.org/cl/continue">continue</a></code> restart in the runner thread. With the environment saved, the error can still be inspected elsewhere or at a later date.</p>
+
+<pre><code>(dissect:present
+  (<a href="#SIMPLE-TASKS:ERROR-ENVIRONMENT">simple-tasks:error-environment</a>
+    (<a href="#SIMPLE-TASKS:SCHEDULE-TASK">simple-tasks:schedule-task</a> 
+      (<a href="http://l1sp.org/cl/make-instance">make-instance</a> 'simple-tasks:blocking-call-task :func (<a href="http://l1sp.org/cl/lambda">lambda</a> () (<a href="http://l1sp.org/cl/error">error</a> &quot;Hi&quot;))) *runner*)))
+</code></pre>
+
 <p>And that's pretty much it.</p>
 
 <pre><code>(<a href="#SIMPLE-TASKS:STOP-RUNNER">simple-tasks:stop-runner</a> *runner*)
@@ -75,6 +83,12 @@ Usually this is due to the need of executing some task in a specific thread, or 
 <p>If you want to add flexibility by creating your own specialised task classes, you should look at <code><a href="#SIMPLE-TASKS:TASK">task</a></code>, <code><a href="#SIMPLE-TASKS:RUN-TASK">run-task</a></code>, and <code><a href="#SIMPLE-TASKS:SCHEDULE-TASK">schedule-task</a></code>. Usually you can get away by just subclassing <code><a href="#SIMPLE-TASKS:TASK">task</a></code>, and adding a <code><a href="#SIMPLE-TASKS:RUN-TASK">run-task</a></code> method to do your calculations in. If you also need to modify the behaviour of the scheduling, adding <code>:after</code> methods to <code><a href="#SIMPLE-TASKS:SCHEDULE-TASK">schedule-task</a></code> can also be useful.</p>
 
 <p>In case that the existing runners aren't suited to your needs, adding one should also not be much of a problem. Simply subclass <code><a href="#SIMPLE-TASKS:RUNNER">runner</a></code>, and implement appropriate methods for <code><a href="#SIMPLE-TASKS:START-RUNNER">start-runner</a></code>, <code><a href="#SIMPLE-TASKS:STOP-RUNNER">stop-runner</a></code>, and <code><a href="#SIMPLE-TASKS:SCHEDULE-TASK">schedule-task</a></code>. The existing methods on <code><a href="#SIMPLE-TASKS:RUNNER">runner</a></code> will take care of keeping the <code><a href="#SIMPLE-TASKS:STATUS">status</a></code> in sync and making sure no invalid calls can be made.</p>
+
+<h2>Also See</h2>
+
+<ul>
+<li><a href="https://shinmera.github.io/dissect">Dissect</a> for error environment capture and inspection.</li>
+</ul>
 </span>
         </c:documentate>
       </article>
@@ -193,6 +207,84 @@ Noe that START-RUNNER for this runner will block the current thread.</pre>
                     <pre class="docstring">Basic task class.</pre>
                   </article>
                 </li><li>
+                  <a name="SIMPLE-TASKS:RUNNER-CONDITION"/>
+                  <article>
+                    <header class="condition">
+                      <span class="type">condition</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:RUNNER-CONDITION" class="name">RUNNER-CONDITION</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Condition superclass for conditions related to runner operations.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:RUNNER-NOT-STARTED"/>
+                  <article>
+                    <header class="condition">
+                      <span class="type">condition</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:RUNNER-NOT-STARTED" class="name">RUNNER-NOT-STARTED</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Condition signalled when the runner is not yet started, but has to be.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:RUNNER-NOT-STOPPED"/>
+                  <article>
+                    <header class="condition">
+                      <span class="type">condition</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:RUNNER-NOT-STOPPED" class="name">RUNNER-NOT-STOPPED</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Condition signalled when the runner did not stop properly.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:TASK-ALREADY-SCHEDULED"/>
+                  <article>
+                    <header class="condition">
+                      <span class="type">condition</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:TASK-ALREADY-SCHEDULED" class="name">TASK-ALREADY-SCHEDULED</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Condition signalled when attempting to reschedule an already scheduled task.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:TASK-CONDITION"/>
+                  <article>
+                    <header class="condition">
+                      <span class="type">condition</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:TASK-CONDITION" class="name">TASK-CONDITION</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Condition superclass for task operation related conditions.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:TASK-ERRORED"/>
+                  <article>
+                    <header class="condition">
+                      <span class="type">condition</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:TASK-ERRORED" class="name">TASK-ERRORED</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Condition signalled when a task failed to run properly.</pre>
+                  </article>
+                </li><li>
                   <a name="SIMPLE-TASKS:CALLBACK"/>
                   <article>
                     <header class="accessor">
@@ -222,6 +314,21 @@ See CALLBACK-TASK</pre>
 
 See QUEUED-RUNNER
 See BLOCKING-CALL-TASK</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:ERROR-ENVIRONMENT"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:ERROR-ENVIRONMENT" class="name">ERROR-ENVIRONMENT</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">An environment object that is stored in case the task fails to run properly.
+
+See DISSECT:ENVIRONMENT</pre>
                   </article>
                 </li><li>
                   <a name="SIMPLE-TASKS:FUNC"/>
@@ -262,7 +369,7 @@ See CALL-TASK</pre>
                         <span class="arguments">(CALL-TASK)</span>
                       </code>
                     </header>
-                    <pre class="docstring">A list of the return values that the call returned.
+                    <pre class="docstring">Returns the values that the call returned.
 
 See CALL-TASK</pre>
                   </article>
@@ -298,8 +405,22 @@ The following statuses are defined:
 :CREATED Object has been initialized, but not started.
 :RUNNING Object is currently executing.
 :STOPPING Runner is in the process of being stopped.
-:STOPPED Object has finished execution.
-:ERRORED Object ended execution with an error.</pre>
+:STOPPED Runner has been stopped.
+:COMPLETED Task successfully completed execution.
+:ERRORED Task ended execution with an error.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:TASK"/>
+                  <article>
+                    <header class="accessor">
+                      <span class="type">accessor</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:TASK" class="name">TASK</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(CONDITION)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring"/>
                   </article>
                 </li><li>
                   <a name="SIMPLE-TASKS:CALL-AS-TASK"/>

@@ -29,6 +29,13 @@ All `call-task`s also save the `return-values` of the function they're calling, 
       (sleep 1)
       (expt 2 12))
 
+In the case that a task encounters a failure during a run, it sets its status to `:errored` and saves the current environment. You can inspect this environment at any later point by fetching it with `error-environment` and looking at its contents with the various functions Dissect provides. This is mostly useful in a scenario where you cannot use a debugger and thus just automatically invoke the `continue` restart in the runner thread. With the environment saved, the error can still be inspected elsewhere or at a later date.
+
+    (dissect:present
+      (simple-tasks:error-environment
+        (simple-tasks:schedule-task 
+          (make-instance 'simple-tasks:blocking-call-task :func (lambda () (error "Hi"))) *runner*)))
+
 And that's pretty much it.
 
     (simple-tasks:stop-runner *runner*)
@@ -37,3 +44,7 @@ And that's pretty much it.
 If you want to add flexibility by creating your own specialised task classes, you should look at `task`, `run-task`, and `schedule-task`. Usually you can get away by just subclassing `task`, and adding a `run-task` method to do your calculations in. If you also need to modify the behaviour of the scheduling, adding `:after` methods to `schedule-task` can also be useful.
 
 In case that the existing runners aren't suited to your needs, adding one should also not be much of a problem. Simply subclass `runner`, and implement appropriate methods for `start-runner`, ` stop-runner`, and `schedule-task`. The existing methods on `runner` will take care of keeping the `status` in sync and making sure no invalid calls can be made.
+
+## Also See
+
+* [Dissect](https://shinmera.github.io/dissect) for error environment capture and inspection.

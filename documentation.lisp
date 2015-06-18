@@ -15,6 +15,15 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 ;; runner.lisp
 (setdocs
+  ((runner-condition type)
+   "Condition superclass for conditions related to runner operations.")
+
+  ((runner-not-started type)
+   "Condition signalled when the runner is not yet started, but has to be.")
+
+  ((runner-not-stopped type)
+   "Condition signalled when the runner did not stop properly.")
+  
   (start-runner
    "Start the the runner.")
   
@@ -41,8 +50,9 @@ The following statuses are defined:
 :CREATED Object has been initialized, but not started.
 :RUNNING Object is currently executing.
 :STOPPING Runner is in the process of being stopped.
-:STOPPED Object has finished execution.
-:ERRORED Object ended execution with an error.")
+:STOPPED Runner has been stopped.
+:COMPLETED Task successfully completed execution.
+:ERRORED Task ended execution with an error.")
  
   ((queued-runner type)
    "Queued runner. Runs tasks in a thread if threading is available.
@@ -71,6 +81,15 @@ See START-RUNNER"))
 
 ;; task.lisp
 (setdocs
+  ((task-condition type)
+   "Condition superclass for task operation related conditions.")
+
+  ((task-already-scheduled type)
+   "Condition signalled when attempting to reschedule an already scheduled task.")
+
+  ((task-errored type)
+   "Condition signalled when a task failed to run properly.")
+  
   ((task type)
    "Basic task class.")
   
@@ -78,6 +97,11 @@ See START-RUNNER"))
    "The runner the task is scheduled on.
 
 See TASK")
+
+  (error-environment
+   "An environment object that is stored in case the task fails to run properly.
+
+See DISSECT:ENVIRONMENT")
   
   ((call-task type)
    "Task class to perform a function call once run. Stores the return values.")
@@ -88,7 +112,7 @@ See TASK")
 See CALL-TASK")
   
   (return-values
-   "A list of the return values that the call returned.
+   "Returns the values that the call returned.
 
 See CALL-TASK")
   
