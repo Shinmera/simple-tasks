@@ -71,7 +71,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   (let ((lock (lock runner))
         (cvar (cvar runner)))
     (unwind-protect
-         (with-simple-restart (abort "Stop the Runner ~a entirely." runner)
+         (with-simple-restart (abort "Stop the runner ~a entirely." runner)
            (bt:acquire-lock lock)
            (loop while (eql (status runner) :running)
                  do (let ((queue (queue runner)))

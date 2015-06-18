@@ -22,7 +22,9 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
    
    #:runner
    #:status
-   
+
+   #:abort
+   #:skip
    #:queued-runner
    #:queue
    #:lock
