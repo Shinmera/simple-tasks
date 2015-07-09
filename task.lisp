@@ -39,8 +39,9 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                           (setf (status task) :errored)
                           (setf (error-environment task) (dissect:capture-environment err)))))
     (setf (status task) :running)
-    (call-next-method)
-    (setf (status task) :completed)))
+    (unwind-protect
+         (call-next-method)
+      (setf (status task) :completed))))
 
 (defgeneric func (call-task))
 
@@ -89,7 +90,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
     (schedule-task task runner)
     (case (status task)
       (:completed (return-values task))
-      (:errored (warn 'task-errored :task task) (values))
+      (:errored (error 'task-errored :task task))
       (T task))))
 
 (defmacro with-body-as-task ((runner &optional (task-class ''blocking-call-task)) &body body)
