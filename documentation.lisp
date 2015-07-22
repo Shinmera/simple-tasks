@@ -49,12 +49,12 @@ See RUN-TASK")
    "Current status indicator of the runner/task.
 The following statuses are defined:
 
-:CREATED Object has been initialized, but not started.
-:RUNNING Object is currently executing.
-:STOPPING Runner is in the process of being stopped.
-:STOPPED Runner has been stopped.
-:COMPLETED Task successfully completed execution.
-:ERRORED Task ended execution with an error.")
+:CREATED     Object has been initialized, but not started.
+:RUNNING     Object is currently executing.
+:STOPPING    Runner is in the process of being stopped.
+:STOPPED     Runner has been stopped.
+:COMPLETED   Task successfully completed execution.
+:ERRORED     Task ended execution with an error.")
  
   ((queued-runner type)
    "Queued runner. Runs tasks in a thread if threading is available.
