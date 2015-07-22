@@ -66,6 +66,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
    #:notifying-task
 
    #:blocking-task
+   #:unblock
    
    #:blocking-call-task
 

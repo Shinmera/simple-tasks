@@ -127,7 +127,7 @@ See START-RUNNER"))
    "Constant matching any ended (not necessarily successful) status.
 
 :STOPPING    Object is in the process of being stopped.
-:STOPPED     object has been stopped.
+:STOPPED     Object has been stopped.
 :COMPLETED   Object successfully completed execution.
 :ERRORED     Object ended execution with an error.")
   

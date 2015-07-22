@@ -20,7 +20,7 @@
   <body>
     <header>
       <h1>simple-tasks</h1>
-      <span>1.0.0</span>
+      <span>1.1.0</span>
       <p>A very simple task scheduling framework.</p>
     </header>
     <div id="content">
@@ -65,7 +65,7 @@ Usually this is due to the need of executing some task in a specific thread, or 
   (<a href="http://l1sp.org/cl/expt">expt</a> 2 12))
 </code></pre>
 
-<p>In the case that a task encounters a failure during a run, it sets its status to <code>:errored</code> and saves the current environment. You can inspect this environment at any later point by fetching it with <code><a href="#SIMPLE-TASKS:ERROR-ENVIRONMENT">error-environment</a></code> and looking at its contents with the various functions Dissect provides. This is mostly useful in a scenario where you cannot use a debugger and thus just automatically invoke the <code><a href="http://l1sp.org/cl/continue">continue</a></code> restart in the runner thread. With the environment saved, the error can still be inspected elsewhere or at a later date.</p>
+<p>In the case that a task encounters a failure during a run, it sets its status to <code>:errored</code> and saves the current environment. You can inspect this environment at any later point by fetching it with <code><a href="#SIMPLE-TASKS:ERROR-ENVIRONMENT">error-environment</a></code> and looking at its contents with the various functions Dissect provides. This is mostly useful in a scenario where you cannot use a debugger and thus just automatically invoke the <code><a href="#SIMPLE-TASKS:SKIP">skip</a></code> restart in the runner thread. With the environment saved, the error can still be inspected elsewhere or at a later date.</p>
 
 <pre><code>(dissect:present
   (<a href="#SIMPLE-TASKS:ERROR-ENVIRONMENT">simple-tasks:error-environment</a>
@@ -112,6 +112,68 @@ Usually this is due to the need of executing some task in a specific thread, or 
                 <span class="nicknames">(ORG.SHIRAKUMO.SIMPLE-TASKS)</span>
               </h3>
               <ul><li>
+                  <a name="SIMPLE-TASKS:+NO-THREADING-STUMP+"/>
+                  <article>
+                    <header class="special">
+                      <span class="type">special</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:+NO-THREADING-STUMP+" class="name">+NO-THREADING-STUMP+</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Constant to hold an instance of NO-THREADING-STUMP.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:+STATUS-ENDED+"/>
+                  <article>
+                    <header class="special">
+                      <span class="type">special</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:+STATUS-ENDED+" class="name">+STATUS-ENDED+</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Constant matching any ended (not necessarily successful) status.
+
+:STOPPING    Object is in the process of being stopped.
+:STOPPED     Object has been stopped.
+:COMPLETED   Object successfully completed execution.
+:ERRORED     Object ended execution with an error.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:+STATUS-RUNNING+"/>
+                  <article>
+                    <header class="special">
+                      <span class="type">special</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:+STATUS-RUNNING+" class="name">+STATUS-RUNNING+</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Constant matching a running status.
+
+:RUNNING     Object is currently executing.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:+STATUS-STARTED+"/>
+                  <article>
+                    <header class="special">
+                      <span class="type">special</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:+STATUS-STARTED+" class="name">+STATUS-STARTED+</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Constant matching any started (not necessarily running) status.
+
+:CREATED     Object has been initialized, but not started.
+:RUNNING     Object is currently executing.</pre>
+                  </article>
+                </li><li>
                   <a name="SIMPLE-TASKS:BLOCKING-CALL-TASK"/>
                   <article>
                     <header class="class">
@@ -123,7 +185,38 @@ Usually this is due to the need of executing some task in a specific thread, or 
                       </code>
                     </header>
                     <pre class="docstring">Task class to perform a function call once run.
-Blocks the scheduling thread until it is done.</pre>
+Blocks the scheduling thread until it is done.
+
+See CALL-TASK
+See BLOCKING-TASK</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:BLOCKING-TASK"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:BLOCKING-TASK" class="name">BLOCKING-TASK</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">A task that will block after being scheduled until it is done or interrupted.
+
+When SCHEDULE-TASK is called on this, it establishes two restarts:
+ABORT    to forcibly abort (interrupt) the task.
+UNBLOCK  to resume execution in the current thread and leave the task running.
+
+If a restart or similar exit functionality is invoked that leaves the scope of
+SCHEDULE-TASK, the task is interrupted.
+
+Note that the restarts are not useful on systems without thread support. In such
+a case the task will be interrupted either way, due to the very nature of running
+in the current thread.
+
+See AWAIT
+See INTERRUPT-TASK
+See NOTIFYING-TASK</pre>
                   </article>
                 </li><li>
                   <a name="SIMPLE-TASKS:CALL-TASK"/>
@@ -150,9 +243,12 @@ Blocks the scheduling thread until it is done.</pre>
                       </code>
                     </header>
                     <pre class="docstring">Task class to perform a function call once run and call a callback upon completion.
-The callback function is called with each return value as an argument.
-Note that the callback function is called within the runner environment
-which may be different from the scheduler environment.</pre>
+
+If the task completes successfully, the callback function is called with each return
+value as an argument. Note that the callback function is called within the runner
+environment which may be different from the scheduler environment.
+
+See CALL-TASK</pre>
                   </article>
                 </li><li>
                   <a name="SIMPLE-TASKS:NO-THREADING-STUMP"/>
@@ -166,6 +262,21 @@ which may be different from the scheduler environment.</pre>
                       </code>
                     </header>
                     <pre class="docstring">Stump class to stand in place of a value on systems without threading support.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:NOTIFYING-TASK"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:NOTIFYING-TASK" class="name">NOTIFYING-TASK</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">A task that will notify a condition upon completion.
+
+This is particularly useful in conjunction with AWAIT.</pre>
                   </article>
                 </li><li>
                   <a name="SIMPLE-TASKS:QUEUED-RUNNER"/>
@@ -193,6 +304,19 @@ Noe that START-RUNNER for this runner will block the current thread.</pre>
                       </code>
                     </header>
                     <pre class="docstring">Basic runner. Runs task as soon as scheduled.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:STATUS-OBJECT"/>
+                  <article>
+                    <header class="class">
+                      <span class="type">class</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:STATUS-OBJECT" class="name">STATUS-OBJECT</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">()</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">A class that has a status.</pre>
                   </article>
                 </li><li>
                   <a name="SIMPLE-TASKS:TASK"/>
@@ -324,7 +448,7 @@ See BLOCKING-CALL-TASK</pre>
                       <code>
                         <h4><a href="#SIMPLE-TASKS:ERROR-ENVIRONMENT" class="name">ERROR-ENVIRONMENT</a></h4>
                         <span class="qualifiers"></span>
-                        <span class="arguments">(OBJECT)</span>
+                        <span class="arguments">(TASK)</span>
                       </code>
                     </header>
                     <pre class="docstring">An environment object that is stored in case the task fails to run properly.
@@ -357,7 +481,10 @@ See CALL-TASK</pre>
                         <span class="arguments">(OBJECT)</span>
                       </code>
                     </header>
-                    <pre class="docstring">The lock used to synchronise operations with the object.</pre>
+                    <pre class="docstring">The lock used to synchronise operations with the object.
+
+See QUEUED-RUNNER
+See BLOCKING-CALL-TASK</pre>
                   </article>
                 </li><li>
                   <a name="SIMPLE-TASKS:RETURN-VALUES"/>
@@ -397,18 +524,10 @@ See TASK</pre>
                       <code>
                         <h4><a href="#SIMPLE-TASKS:STATUS" class="name">STATUS</a></h4>
                         <span class="qualifiers"></span>
-                        <span class="arguments">(RUNNER/TASK)</span>
+                        <span class="arguments">(STATUS-OBJECT)</span>
                       </code>
                     </header>
-                    <pre class="docstring">Current status indicator of the runner/task.
-The following statuses are defined:
-
-:CREATED Object has been initialized, but not started.
-:RUNNING Object is currently executing.
-:STOPPING Runner is in the process of being stopped.
-:STOPPED Runner has been stopped.
-:COMPLETED Task successfully completed execution.
-:ERRORED Task ended execution with an error.</pre>
+                    <pre class="docstring">Current status indicator of the status-object.</pre>
                   </article>
                 </li><li>
                   <a name="SIMPLE-TASKS:TASK"/>
@@ -418,7 +537,7 @@ The following statuses are defined:
                       <code>
                         <h4><a href="#SIMPLE-TASKS:TASK" class="name">TASK</a></h4>
                         <span class="qualifiers"></span>
-                        <span class="arguments">(CONDITION)</span>
+                        <span class="arguments">(TASK-CONDITION)</span>
                       </code>
                     </header>
                     <pre class="docstring">The task related to the condition.</pre>
@@ -435,7 +554,10 @@ The following statuses are defined:
                       </code>
                     </header>
                     <pre class="docstring">Call function within a task, usually a BLOCKING-CALL-TASK.
-Returns the values that have been saved in the task after SCHEDULE-TASK returns.
+Depending on the task's STATUS after SCHEDULE-TASK returns, the following happens.
+  :COMPLETED  The task's return values are returned.
+  :ERRORED    A condition of type TASK-ERRORED is signalled.
+  T           The task is returned.
 
 See SCHEDULE-TASK
 See BLOCKING-CALL-TASK</pre>
@@ -457,6 +579,40 @@ On platforms with thread support, this returns the new thread.
 On platforms without, this simply calls START-RUNNER and returns NIL.
 
 See START-RUNNER</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:AWAIT"/>
+                  <article>
+                    <header class="generic">
+                      <span class="type">generic</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:AWAIT" class="name">AWAIT</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(TASK STATUS)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Wait for the TASK to match a certain STATUS.
+
+On systems without thread support this does nothing.
+
+See STATUS=</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:INTERRUPT-TASK"/>
+                  <article>
+                    <header class="generic">
+                      <span class="type">generic</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:INTERRUPT-TASK" class="name">INTERRUPT-TASK</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(TASK RUNNER)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Interrupt the TASK to stop it from execution on RUNNER.
+
+If the task is currently running, it is forcibly aborted. In either case,
+the task's status is changed to :COMPLETED and it will not execute further.
+On systems without thread support this does nothing.</pre>
                   </article>
                 </li><li>
                   <a name="SIMPLE-TASKS:QUEUE"/>
@@ -523,6 +679,19 @@ See RUN-TASK</pre>
                     <pre class="docstring">Start the the runner.</pre>
                   </article>
                 </li><li>
+                  <a name="SIMPLE-TASKS:STATUS="/>
+                  <article>
+                    <header class="generic">
+                      <span class="type">generic</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:STATUS=" class="name">STATUS=</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(A B)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Compare two statuses with each other (commutative).</pre>
+                  </article>
+                </li><li>
                   <a name="SIMPLE-TASKS:STOP-RUNNER"/>
                   <article>
                     <header class="generic">
@@ -534,6 +703,21 @@ See RUN-TASK</pre>
                       </code>
                     </header>
                     <pre class="docstring">Stop the the runner.</pre>
+                  </article>
+                </li><li>
+                  <a name="SIMPLE-TASKS:THREAD"/>
+                  <article>
+                    <header class="generic">
+                      <span class="type">generic</span>
+                      <code>
+                        <h4><a href="#SIMPLE-TASKS:THREAD" class="name">THREAD</a></h4>
+                        <span class="qualifiers"></span>
+                        <span class="arguments">(OBJECT)</span>
+                      </code>
+                    </header>
+                    <pre class="docstring">Returns the current thread associated with the queued-runner if any.
+
+See QUEUED-RUNNER</pre>
                   </article>
                 </li><li>
                   <a name="SIMPLE-TASKS:WITH-BODY-AS-TASK"/>
