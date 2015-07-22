@@ -19,10 +19,10 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                                  (task c)))))
 
 (defgeneric runner (task))
+(defgeneric await (task status))
 
-(defclass task ()
-  ((status :initform :created :accessor status)
-   (runner :initform NIL :accessor runner)
+(defclass task (status-object)
+  ((runner :initform NIL :accessor runner)
    (error-environment :initform NIL :accessor error-environment)))
 
 (defmethod print-object ((task task) stream)
@@ -43,8 +43,13 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
          (call-next-method)
       (setf (status task) :completed))))
 
-(defgeneric func (call-task))
+(defmethod await ((task task) status)
+  #+:thread-support
+  (loop until (status= task status)
+        do (bt:thread-yield))
+  task)
 
+(defgeneric func (call-task))
 (defgeneric return-values (call-task))
 
 (defclass call-task (task)
@@ -64,26 +69,55 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   (setf (return-values task)
         (multiple-value-list (funcall (func task)))))
 
-(defclass blocking-call-task (call-task)
+(defclass notifying-task (task)
   ((lock :initarg :lock :accessor lock)
    (cvar :initarg :cvar :accessor cvar))
   (:default-initargs
-   :lock #-:thread-support *no-threading-stump* #+:thread-support (bt:make-lock "call-task")
-   :cvar #-:thread-support *no-threading-stump* #+:thread-support (bt:make-condition-variable :name "call-task")))
+   :lock #-:thread-support *no-threading-stump* #+:thread-support (bt:make-lock "notifying-task")
+   :cvar #-:thread-support *no-threading-stump* #+:thread-support (bt:make-condition-variable :name "notifying-task")))
 
 #+:thread-support
-(defmethod schedule-task :after ((task blocking-call-task) runner)
-  (loop while (find (status task) '(:created :running))
-        do (bt:with-lock-held ((lock task))
-             (bt:condition-wait (cvar task) (lock task)))))
-
-#+:thread-support
-(defmethod run-task :around ((task blocking-call-task))
+(defmethod run-task :around ((task notifying-task))
   (unwind-protect
        (call-next-method)
+    ;; Make sure we notify about our exit.
     (bt:thread-yield)
     (bt:with-lock-held ((lock task))
       (bt:condition-notify (cvar task)))))
+
+#+:thread-support
+(defmethod await ((task notifying-task) status)
+  (loop until (status= task status)
+        do (bt:with-lock-held ((lock task))
+             (bt:condition-wait (cvar task) (lock task)))))
+
+(defclass blocking-task (notifying-task)
+  ())
+
+#+:thread-support
+(defmethod schedule-task :around ((task blocking-task) runner)
+  (let ((interrupt T))
+    (unwind-protect
+         (restart-case
+             (progn
+               (call-next-method)
+               (await task +status-ended+))
+           (abort ()
+             :report "Abort the task.")
+           (unblock ()
+             :report "Leave the task running and unblock this thread."
+             (setf interrupt NIL)))
+      ;; If we exit from this without having INTERRUPT set to NIL by UNBLOCK,
+      ;; we most likely exited through a restart or some other functionality
+      ;; and actually want to interrupt the task to properly simulate the
+      ;; same behaviour as we would have if the task were actually running in
+      ;; the current thread.
+      (when (and interrupt (eql (status task) :running))
+        (interrupt-task task runner))))
+  task)
+
+(defclass blocking-call-task (call-task blocking-task)
+  ())
 
 (defun call-as-task (function runner &optional (task-class 'blocking-call-task))
   (let ((task (make-instance task-class :func function)))

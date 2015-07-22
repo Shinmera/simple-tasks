@@ -15,6 +15,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   :serial T
   :components ((:file "package")
                (:file "toolkit")
+               (:file "status")
                (:file "runner")
                (:file "task")
                (:file "documentation"))
