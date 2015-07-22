@@ -6,6 +6,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (in-package #:org.shirakumo.simple-tasks)
 
+(defgeneric task (task-condition))
+
 (define-condition task-condition (condition)
   ((task :initarg :task :accessor task))
   (:default-initargs :task (error "TASK required.")))
@@ -49,6 +51,10 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
         do (bt:thread-yield))
   task)
 
+(defmethod interrupt-task ((task task) (null null))
+  (when (runner task)
+    (interrupt-task task (runner task))))
+
 (defgeneric func (call-task))
 (defgeneric return-values (call-task))
 
@@ -73,8 +79,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   ((lock :initarg :lock :accessor lock)
    (cvar :initarg :cvar :accessor cvar))
   (:default-initargs
-   :lock #-:thread-support *no-threading-stump* #+:thread-support (bt:make-lock "notifying-task")
-   :cvar #-:thread-support *no-threading-stump* #+:thread-support (bt:make-condition-variable :name "notifying-task")))
+   :lock #-:thread-support +no-threading-stump+ #+:thread-support (bt:make-lock "notifying-task")
+   :cvar #-:thread-support +no-threading-stump+ #+:thread-support (bt:make-condition-variable :name "notifying-task")))
 
 #+:thread-support
 (defmethod run-task :around ((task notifying-task))
@@ -94,7 +100,6 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 (defclass blocking-task (notifying-task)
   ())
 
-#+:thread-support
 (defmethod schedule-task :around ((task blocking-task) runner)
   (let ((interrupt T))
     (unwind-protect

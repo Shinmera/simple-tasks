@@ -30,3 +30,12 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (defmethod status= (b (a status-object))
   (status= a b))
+
+(defmethod status= ((a list) (b list))
+  (loop for status in a thereis (find status b :test #'eql)))
+
+(defun status-list-p (list)
+  (every #'symbolp list))
+
+(deftype status ()
+  '(or symbol status-object (and list (satisfies status-list-p))))

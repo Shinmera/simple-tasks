@@ -13,4 +13,4 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   (print-unreadable-object (o s)
     (format stream "NO THREADING PLACEHOLDER")))
 
-(defvar *no-threading-stump* (make-instance 'no-threading-stump))
+(defvar +no-threading-stump+ (make-instance 'no-threading-stump))

@@ -59,6 +59,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 (defgeneric queue (runner))
 (defgeneric lock (object))
 (defgeneric cvar (object))
+(defgeneric thread (object))
 
 (defclass queued-runner (runner)
   ((queue :initarg :queue :reader queue :writer %set-queue)
@@ -67,9 +68,9 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
    (thread :initarg :thread :reader thread :writer %set-thread))
   (:default-initargs
    :queue (make-array 0 :adjustable T :fill-pointer 0)
-   :lock #-:thread-support *no-threading-stump* #+:thread-support (bt:make-lock "task-runner") 
-   :cvar #-:thread-support *no-threading-stump* #+:thread-support (bt:make-condition-variable :name "task-runner")
-   :thread #-:thread-support *no-threading-stump* #+:thread-support NIL))
+   :lock #-:thread-support +no-threading-stump+ #+:thread-support (bt:make-lock "task-runner") 
+   :cvar #-:thread-support +no-threading-stump+ #+:thread-support (bt:make-condition-variable :name "task-runner")
+   :thread #-:thread-support +no-threading-stump+ #+:thread-support NIL))
 
 (defvar *current-queue* NIL)
 (defvar *current-task* NIL)
