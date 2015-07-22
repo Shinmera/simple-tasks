@@ -21,6 +21,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                                  (task c)))))
 
 (defgeneric runner (task))
+(defgeneric error-environment (task))
 (defgeneric await (task status))
 
 (defclass task (status-object)

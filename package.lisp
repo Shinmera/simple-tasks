@@ -19,36 +19,55 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
    #:stop-runner
    #:schedule-task
    #:run-task
+   #:interrupt-task
    
    #:runner
-   #:status
 
-   #:abort
-   #:skip
-   #:queued-runner
    #:queue
    #:lock
    #:cvar
+   #:thread
+
+   #:queued-runner
+
+   #:abort
+   #:skip
+   
    #:make-runner-thread)
+  ;; status.lisp
+  (:export
+   #:+status-started+
+   #:+status-running+
+   #:+status-ended+
+   
+   #:status
+   #:status=
+   
+   #:status-object
+   #:status)
   ;; task.lisp
   (:export
-   #:task-condition
    #:task
+   #:task-condition
    #:task-already-scheduled
    #:task-errored
-   
-   #:task
-   #:status
+
    #:runner
+   #:await
    #:error-environment
    
-   #:call-task
+   #:task
+   
    #:func
    #:return-values
    
+   #:call-task
+
+   #:notifying-task
+
+   #:blocking-task
+   
    #:blocking-call-task
-   #:lock
-   #:cvar
 
    #:call-as-task
    #:with-body-as-task
@@ -57,4 +76,5 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
    #:callback)
   ;; task.lisp
   (:export
+   #:+no-threading-stump+
    #:no-threading-stump))

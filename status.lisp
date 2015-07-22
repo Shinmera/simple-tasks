@@ -16,6 +16,12 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 (defclass status-object ()
   ((status :initform :created :accessor status)))
 
+(defun status-list-p (list)
+  (every #'symbolp list))
+
+(deftype status ()
+  '(or symbol status-object (and list (satisfies status-list-p))))
+
 (defmethod status= ((a status-object) (b status-object))
   (eql (status a) (status b)))
 
@@ -33,9 +39,3 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (defmethod status= ((a list) (b list))
   (loop for status in a thereis (find status b :test #'eql)))
-
-(defun status-list-p (list)
-  (every #'symbolp list))
-
-(deftype status ()
-  '(or symbol status-object (and list (satisfies status-list-p))))

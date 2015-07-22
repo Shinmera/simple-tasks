@@ -29,7 +29,7 @@ All `call-task`s also save the `return-values` of the function they're calling, 
       (sleep 1)
       (expt 2 12))
 
-In the case that a task encounters a failure during a run, it sets its status to `:errored` and saves the current environment. You can inspect this environment at any later point by fetching it with `error-environment` and looking at its contents with the various functions Dissect provides. This is mostly useful in a scenario where you cannot use a debugger and thus just automatically invoke the `continue` restart in the runner thread. With the environment saved, the error can still be inspected elsewhere or at a later date.
+In the case that a task encounters a failure during a run, it sets its status to `:errored` and saves the current environment. You can inspect this environment at any later point by fetching it with `error-environment` and looking at its contents with the various functions Dissect provides. This is mostly useful in a scenario where you cannot use a debugger and thus just automatically invoke the `skip` restart in the runner thread. With the environment saved, the error can still be inspected elsewhere or at a later date.
 
     (dissect:present
       (simple-tasks:error-environment
