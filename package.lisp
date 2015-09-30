@@ -58,6 +58,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
    #:error-environment
    
    #:task
+
+   #:stop
    
    #:func
    #:return-values

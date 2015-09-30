@@ -42,13 +42,18 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   (setf (runner task) runner))
 
 (defmethod run-task :around ((task task))
-  (handler-bind ((error (lambda (err)
-                          (setf (status task) :errored)
-                          (setf (error-environment task) (dissect:capture-environment err)))))
-    (setf (status task) :running)
-    (unwind-protect
-         (call-next-method)
-      (setf (status task) :completed))))
+  (when (task-ready-p task)
+    (restart-case
+        (handler-bind ((error (lambda (err)
+                                (setf (status task) :errored)
+                                (setf (error-environment task) (dissect:capture-environment err)))))
+          (setf (status task) :running)
+          (unwind-protect
+               (call-next-method)
+            (setf (status task) :completed)))
+      (stop ()
+        :report "Stop the task."
+        (setf (status task) :stopped)))))
 
 (defmethod await ((task task) status)
   #+:thread-support

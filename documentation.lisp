@@ -51,7 +51,10 @@ scheduled.
 See RUN-TASK")
   
   (run-task
-   "Run the given task object directly.")
+   "Run the given task object directly.
+
+One restart is established:
+STOP    to forcibly stop (interrupt) the task. Assigns the :STOPPED status.")
 
   (interrupt-task
    "Interrupt the TASK to stop it from execution on RUNNER.

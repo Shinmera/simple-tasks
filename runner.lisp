@@ -90,8 +90,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                       (loop for task across *current-queue*
                             do (let ((*current-task* task))
                                  (with-simple-restart (skip "Skip running ~a" task)
-                                   (when (task-ready-p task)
-                                     (run-task task))))))
+                                   (run-task task)))))
                     (bt:acquire-lock lock)
                     (when (= 0 (length (queue runner)))
                       (bt:condition-wait cvar lock))))
@@ -137,7 +136,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
      (when *current-task*
        (when (or (null task) (eql task *current-task*))
          (setf task *current-task*)
-         (invoke-restart 'skip)))))
+         (invoke-restart 'stop)))))
   task)
 
 (defun make-runner-thread (runner)
