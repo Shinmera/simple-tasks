@@ -52,6 +52,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
    #:task-already-scheduled
    #:task-errored
 
+   #:task-ready-p
    #:runner
    #:await
    #:error-environment

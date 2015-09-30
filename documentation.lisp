@@ -179,6 +179,9 @@ See STATUS=")
    "An environment object that is stored in case the task fails to run properly.
 
 See DISSECT:ENVIRONMENT")
+
+  (task-ready-p
+   "Returns T if the task is ready to be run.")
   
   ((call-task type)
    "Task class to perform a function call once run. Stores the return values.")

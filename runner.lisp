@@ -50,7 +50,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
     (error 'runner-not-started :runner runner)))
 
 (defmethod schedule-task (task (runner runner))
-  (run-task task)
+  (when (task-ready-p task)
+    (run-task task))
   task)
 
 (defmethod interrupt-task (task (runner runner))
@@ -89,7 +90,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                       (loop for task across *current-queue*
                             do (let ((*current-task* task))
                                  (with-simple-restart (skip "Skip running ~a" task)
-                                   (when (eql (status task) :created)
+                                   (when (task-ready-p task)
                                      (run-task task))))))
                     (bt:acquire-lock lock)
                     (when (= 0 (length (queue runner)))

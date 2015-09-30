@@ -20,6 +20,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   (:report (lambda (c s) (format s "Task ~s errored. See the task's ERROR-ENVIRONMENT for more information."
                                  (task c)))))
 
+(defgeneric task-ready-p (task))
 (defgeneric runner (task))
 (defgeneric error-environment (task))
 (defgeneric await (task status))
@@ -27,6 +28,9 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 (defclass task (status-object)
   ((runner :initform NIL :accessor runner)
    (error-environment :initform NIL :accessor error-environment)))
+
+(defmethod task-ready-p ((task task))
+  (eql (status task) :created))
 
 (defmethod print-object ((task task) stream)
   (print-unreadable-object (task stream :type T :identity T)
