@@ -48,12 +48,11 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                                 (setf (status task) :errored)
                                 (setf (error-environment task) (dissect:capture-environment err)))))
           (setf (status task) :running)
-          (unwind-protect
-               (call-next-method)
-            (setf (status task) :completed)))
+          (call-next-method)
+          (setf (status task) :completed))
       (stop ()
         :report "Stop the task."
-        (setf (status task) :stopped)))))
+        (setf (status task) :stopped))))))
 
 (defmethod await ((task task) status)
   #+:thread-support
