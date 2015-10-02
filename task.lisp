@@ -52,7 +52,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
           (setf (status task) :completed))
       (stop ()
         :report "Stop the task."
-        (setf (status task) :stopped))))))
+        (setf (status task) :stopped)))))
 
 (defmethod await ((task task) status)
   #+:thread-support
