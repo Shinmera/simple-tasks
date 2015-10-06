@@ -141,13 +141,16 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (defun make-runner-thread (runner)
   #+:thread-support
-  (bt:make-thread
-   (lambda () (start-runner runner))
-   :name "runner thread"
-   :initial-bindings (append `((*standard-output* . ,*standard-output*)
-                               (*error-output* . ,*error-output*))
-                             bt:*standard-io-bindings*
-                             bt:*default-special-bindings*))
+  (prog1
+      (bt:make-thread
+       (lambda () (start-runner runner))
+       :name "runner thread"
+       :initial-bindings (append `((*standard-output* . ,*standard-output*)
+                                   (*error-output* . ,*error-output*))
+                                 bt:*standard-io-bindings*
+                                 bt:*default-special-bindings*))
+    (loop until (eql (status runner) :running)
+          do (bt:thread-yield)))
   #-:thread-support
   (progn
     (start-runner runner)
