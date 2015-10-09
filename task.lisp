@@ -30,7 +30,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
    (error-environment :initform NIL :accessor error-environment)))
 
 (defmethod task-ready-p ((task task))
-  (eql (status task) :created))
+  (status= task '(:created :scheduled)))
 
 (defmethod print-object ((task task) stream)
   (print-unreadable-object (task stream :type T :identity T)
@@ -39,7 +39,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 (defmethod schedule-task :before ((task task) runner)
   (when (runner task)
     (cerror "Schedule anyway." 'task-already-scheduled :task task))
-  (setf (runner task) runner))
+  (setf (runner task) runner)
+  (setf (status task) :scheduled))
 
 (defmethod run-task :around ((task task))
   (when (task-ready-p task)

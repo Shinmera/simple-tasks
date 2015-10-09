@@ -119,6 +119,7 @@ See START-RUNNER"))
    "Constant matching any started (not necessarily running) status.
 
 :CREATED     Object has been initialized, but not started.
+:SCHEDULED   Object has been scheduled for execution.
 :RUNNING     Object is currently executing.")
 
   ((+status-running+ variable)

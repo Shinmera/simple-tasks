@@ -6,7 +6,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (in-package #:org.shirakumo.simple-tasks)
 
-(defvar +status-started+ '(:created :running))
+(defvar +status-started+ '(:created :scheduled :running))
 (defvar +status-running+ '(:running))
 (defvar +status-ended+ '(:completed :errored :stopped))
 
