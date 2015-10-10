@@ -126,12 +126,12 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
      ;; Search runner queue
      (loop for el across (queue runner)
            when (eql el task)
-           do (setf (status task) :completed))
+           do (setf (status task) :stopping))
      ;; Search internal queue
      (when *current-queue*
        (loop for el across *current-queue*
              when (eql el task)
-             do (setf (status task) :completed)))
+             do (setf (status task) :stopping)))
      ;; Potentially abort if running
      (when *current-task*
        (when (or (null task) (eql task *current-task*))
