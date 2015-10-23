@@ -20,7 +20,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
    #:schedule-task
    #:run-task
    #:interrupt-task
-   
+
+   #:*runner*
    #:runner
 
    #:queue

@@ -24,6 +24,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 (defgeneric run-task (task))
 (defgeneric interrupt-task (task runner))
 
+(defvar *runner* NIL)
 (defclass runner (status-object)
   ())
 
@@ -35,6 +36,10 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   (when (eql (status runner) :running)
     (cerror "Start anyway." "Runner ~s is already running!" runner))
   (setf (status runner) :running))
+
+(defmethod start-runner :around ((runner runner))
+  (let ((*runner* runner))
+    (call-next-method)))
 
 (defmethod start-runner ((runner runner)))
 

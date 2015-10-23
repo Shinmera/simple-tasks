@@ -62,6 +62,11 @@ STOP    to forcibly stop (interrupt) the task. Assigns the :STOPPED status.")
 If the task is currently running, it is forcibly aborted. In either case,
 the task's status is changed to :COMPLETED and it will not execute further.
 On systems without thread support this does nothing.")
+
+  ((*runner* variable)
+   "Bound to the current runner if within a runner context.
+Otherwise, set to NIL. Useful to detect if a task is run in
+a particular runner to avoid conflicts.")
  
   ((runner type)
    "Basic runner. Runs task as soon as scheduled.")

@@ -114,9 +114,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   (let ((interrupt T))
     (unwind-protect
          (restart-case
-             (progn
-               (call-next-method)
-               (await task +status-ended+))
+             (call-next-method)
            (abort ()
              :report "Abort the task.")
            (unblock ()
@@ -130,6 +128,15 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
       (when (and interrupt (eql (status task) :running))
         (interrupt-task task runner))))
   task)
+
+(defmethod schedule-task ((task blocking-task) runner)
+  ;; Detect if in own runner. If so, just run directly as we'd deadlock otherwise.
+  (if (eql *runner* runner)
+      (run-task task)
+      (call-next-method)))
+
+(defmethod schedule-task :after ((task blocking-task) runner)
+  (await task +status-ended+))
 
 (defclass blocking-call-task (call-task blocking-task)
   ())
