@@ -37,7 +37,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
     (format stream ":STATUS ~s" (status task))))
 
 (defmethod schedule-task :before ((task task) runner)
-  (when (runner task)
+  (when (and (runner task) (not (task-ready-p task)))
     (cerror "Schedule anyway." 'task-already-scheduled :task task))
   (setf (runner task) runner)
   (setf (status task) :scheduled))
