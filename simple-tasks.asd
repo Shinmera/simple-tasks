@@ -20,4 +20,5 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                (:file "task")
                (:file "documentation"))
   :depends-on (:bordeaux-threads
+               :array-utils
                :dissect))

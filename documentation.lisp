@@ -59,8 +59,10 @@ STOP    to forcibly stop (interrupt) the task. Assigns the :STOPPED status.")
   (interrupt-task
    "Interrupt the TASK to stop it from execution on RUNNER.
 
-If the task is currently running, it is forcibly aborted. In either case,
-the task's status is changed to :COMPLETED and it will not execute further.
+If the task is currently on the queue to be executed (:SCHEDULED), it is
+removed from the queue. If the task is currently running, it is forcibly
+aborted using the ABORT restart. In either case, the task's status is 
+changed to :STOPPED and it will not execute further.
 On systems without thread support this does nothing.")
 
   ((*runner* variable)
@@ -82,7 +84,13 @@ when you look at the queue at any particular moment, tasks that are not
 in it might not have run yet.")
   
   (lock
-   "The lock used to synchronise operations with the object.
+   "The lock used to coordinate task scheduling with the runner.
+This is a recursive lock.
+
+See QUEUED-RUNNER")
+
+  (cloc
+   "The lock used to synchronise the condition variable.
 
 See QUEUED-RUNNER
 See BLOCKING-CALL-TASK")
