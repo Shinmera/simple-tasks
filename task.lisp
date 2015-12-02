@@ -62,7 +62,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   task)
 
 (defmethod interrupt-task ((task task) (null null))
-  (when (find-restart 'stop)
+  (when (and (status= task :running) (find-restart 'stop))
+    (setf (status task) :stopping)
     (invoke-restart 'stop)))
 
 (defmethod interrupt-task ((task task) (true (eql T)))
