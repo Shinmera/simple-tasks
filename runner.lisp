@@ -24,6 +24,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 (defgeneric run-task (task))
 (defgeneric interrupt-task (task runner))
 
+(defvar *current-task* NIL)
 (defvar *runner* NIL)
 (defclass runner (status-object)
   ())
@@ -56,7 +57,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (defmethod schedule-task (task (runner runner))
   (when (task-ready-p task)
-    (run-task task))
+    (let ((*current-task* task))
+      (run-task task)))
   task)
 
 (defmethod interrupt-task (task (runner runner))
@@ -82,7 +84,6 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
    :thread #-:thread-support +no-threading-stump+ #+:thread-support NIL))
 
 (defvar *current-queue* NIL)
-(defvar *current-task* NIL)
 #+:thread-support
 (defmethod start-runner ((runner queued-runner))
   (%set-thread (bt:current-thread) runner)
