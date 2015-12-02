@@ -59,11 +59,15 @@ STOP    to forcibly stop (interrupt) the task. Assigns the :STOPPED status.")
   (interrupt-task
    "Interrupt the TASK to stop it from execution on RUNNER.
 
-If the task is currently on the queue to be executed (:SCHEDULED), it is
-removed from the queue. If the task is currently running, it is forcibly
-aborted using the ABORT restart. In either case, the task's status is 
-changed to :STOPPED and it will not execute further.
-On systems without thread support this does nothing.")
+If the task is currently on the RUNNER's queue to be executed (:SCHEDULED), it
+is removed from the queue. If the task is currently running, it is forcibly
+aborted. In either case, the task's status is changed to :STOPPED and it 
+will not execute further. On systems without thread support this does nothing.
+
+If this is called with the RUNNER being T, the current runner of the TASK
+is used, if possible. If this is called with the RUNNER being NIL, the
+actual termination mechanism for the task is performed, leading it to be
+terminated.")
 
   ((*runner* variable)
    "Bound to the current runner if within a runner context.
