@@ -149,9 +149,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
            (clean-vector *current-queue*))
          ;; Potentially abort if running
          (when *current-task*
-           (when (or (null task) (eql task *current-task*))
-             (setf task *current-task*)
-             (setf (status task) :stopping)
+           (when (or (status= task :running) (eql task *current-task*))
              (interrupt-task task NIL)))))))
   task)
 
