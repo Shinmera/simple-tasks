@@ -151,7 +151,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
            (when (or (null task) (eql task *current-task*))
              (setf task *current-task*)
              (setf (status task) :stopping)
-             (invoke-restart 'stop)))))))
+             (interrupt-task task NIL)))))))
   task)
 
 (defun make-runner-thread (runner)
