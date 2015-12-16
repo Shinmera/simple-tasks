@@ -31,7 +31,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (defmethod print-object ((runner runner) stream)
   (print-unreadable-object (runner stream :type T :identity T)
-    (format stream ":STATUS ~s" (status runner))))
+    (format stream "~s ~s" :status (status runner))))
 
 (defmethod start-runner :before ((runner runner))
   (when (eql (status runner) :running)
