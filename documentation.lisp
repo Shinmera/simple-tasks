@@ -86,6 +86,13 @@ or which ones have. When the queued runner runs, it retains the current
 queue for processing and sets a new, empty queue on the runner. As such,
 when you look at the queue at any particular moment, tasks that are not
 in it might not have run yet.")
+
+  (back-queue
+   "The current back-queue of the runner.
+
+Used to swap with QUEUE when events are handled.
+
+See QUEUE")
   
   (lock
    "The lock used to coordinate task scheduling with the runner.

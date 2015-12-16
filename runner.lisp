@@ -65,6 +65,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   task)
 
 (defgeneric queue (runner))
+(defgeneric back-queue (runner))
 (defgeneric lock (object))
 (defgeneric cloc (object))
 (defgeneric cvar (object))
@@ -72,12 +73,14 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (defclass queued-runner (runner)
   ((queue :initarg :queue :reader queue :writer %set-queue)
+   (back-queue :initarg :back-queue :reader back-queue :writer %set-back-queue)
    (lock :initarg :lock :reader lock)
    (cloc :initarg :cloc :reader cloc)
    (cvar :initarg :cvar :reader cvar)
    (thread :initarg :thread :reader thread :writer %set-thread))
   (:default-initargs
-   :queue (make-array 0 :adjustable T :fill-pointer 0)
+   :queue (make-array 100 :adjustable T :fill-pointer 0)
+   :back-queue (make-array 100 :adjustable T :fill-pointer 0)
    :lock #-:thread-support +no-threading-stump+ #+:thread-support (bt:make-recursive-lock "task-runner-queue-lock")
    :cloc #-:thread-support +no-threading-stump+ #+:thread-support (bt:make-lock "task-runner-condition-lock")
    :cvar #-:thread-support +no-threading-stump+ #+:thread-support (bt:make-condition-variable :name "task-runner-condition")
@@ -95,7 +98,9 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
            (bt:acquire-recursive-lock lock)
            (loop while (eql (status runner) :running)
                  do (let ((*current-queue* (queue runner)))
-                      (%set-queue (make-array 0 :adjustable T :fill-pointer 0) runner)
+                      (%set-queue (back-queue runner) runner)
+                      (%set-back-queue *current-queue* runner)
+                      (setf (fill-pointer (queue runner)) 0)
                       (bt:release-recursive-lock lock)
                       (loop for task across *current-queue*
                             do (let ((*current-task* task))
