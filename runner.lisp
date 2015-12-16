@@ -166,7 +166,6 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
        :name "runner thread"
        :initial-bindings (append `((*standard-output* . ,*standard-output*)
                                    (*error-output* . ,*error-output*))
-                                 bt:*standard-io-bindings*
                                  bt:*default-special-bindings*))
     (loop until (eql (status runner) :running)
           do (bt:thread-yield)))
