@@ -123,10 +123,10 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
         (T
          (bt:condition-notify (cvar runner))
          (bt:thread-yield)
-         (loop for i from 0 to 5
+         (loop for i from 0 to 500
                do (if (eql (status runner) :stopped)
                       (return)
-                      (sleep 1))
+                      (sleep 0.01))
                finally (warn 'runner-not-stopped :runner runner))
          runner)))
 
