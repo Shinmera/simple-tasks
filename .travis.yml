@@ -1,0 +1,23 @@
+language: common-lisp
+
+env:
+  matrix:
+    - LISP=sbcl
+    - LISP=ccl
+
+install:
+  # CL
+  - curl https://raw.githubusercontent.com/luismbo/cl-travis/master/install.sh | bash
+
+script:
+  - cl -e '(ql:quickload :simple-tasks)'
+       -e '(defvar *runner* (make-instance (quote simple-tasks:queued-runner)))'
+       -e '(defvar *thread* (simple-tasks:make-runner-thread *runner*))'
+       -e '(defvar *task* (make-instance (quote simple-tasks:call-task) :func (lambda () (print "hi"))))'
+       -e '(simple-tasks:schedule-task *task* *runner*)'
+       -e '(simple-tasks:with-body-as-task (*runner*) (sleep 1) (expt 2 12))'
+       -e '(format T "~&~%!!! WOAH IT WORKS !!!~&~%")'
+
+notifications:
+  email:
+    - shinmera@tymoon.eu
