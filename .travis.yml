@@ -16,7 +16,6 @@ script:
        -e '(defvar *task* (make-instance (quote simple-tasks:call-task) :func (lambda () (print "hi"))))'
        -e '(simple-tasks:schedule-task *task* *runner*)'
        -e '(simple-tasks:with-body-as-task (*runner*) (sleep 1) (expt 2 12))'
-       -e '(format T "~&~%!!! WOAH IT WORKS !!!~&~%")'
 
 notifications:
   email:
