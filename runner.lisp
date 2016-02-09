@@ -96,9 +96,9 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
     (unwind-protect
          (with-simple-restart (stop-runner "Stop the runner ~a entirely." runner)
            (with-simple-restart (abort "Stop the runner ~a entirely." runner)
-             (bt:acquire-recursive-lock lock)
              (loop while (eql (status runner) :running)
-                   do (let ((*current-queue* (queue runner)))
+                   do (bt:acquire-recursive-lock lock)
+                      (let ((*current-queue* (queue runner)))
                         (%set-queue (back-queue runner) runner)
                         (%set-back-queue *current-queue* runner)
                         (setf (fill-pointer (queue runner)) 0)
