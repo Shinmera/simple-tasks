@@ -42,14 +42,14 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   (let ((*runner* runner))
     (call-next-method)))
 
-(defmethod start-runner ((runner runner)))
+(defmethod start-runner ((runner runner)) runner)
 
 (defmethod stop-runner :before ((runner runner))
   (unless (eql (status runner) :running)
     (cerror "Stop anyway." "Runner ~s is not running!" runner))
   (setf (status runner) :stopped))
 
-(defmethod stop-runner ((runner runner)))
+(defmethod stop-runner ((runner runner)) runner)
 
 (defmethod schedule-task :before (task (runner runner))
   (unless (eql (status runner) :running)
