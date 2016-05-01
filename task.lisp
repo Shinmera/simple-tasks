@@ -49,8 +49,9 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                                 (setf (status task) :errored)
                                 (setf (error-environment task) (dissect:capture-environment err)))))
           (setf (status task) :running)
-          (call-next-method)
-          (setf (status task) :completed))
+          (multiple-value-prog1
+              (call-next-method)
+            (setf (status task) :completed)))
       (stop ()
         :report "Stop the task."
         (setf (status task) :stopped)))))
