@@ -1,10 +1,9 @@
 #|
-This file is a part of simple-tasks
-(c) 2013 Shirakumo http://tymoon.eu (shinmera@tymoon.eu)
-Author: Nicolas Hafner <shinmera@tymoon.eu>
+ This file is a part of simple-tasks
+ (c) 2013 Shirakumo http://tymoon.eu (shinmera@tymoon.eu)
+ Author: Nicolas Hafner <shinmera@tymoon.eu>
 |#
 
-(in-package #:cl-user)
 (asdf:defsystem simple-tasks
   :version "1.2.0"
   :author "Nicolas Hafner <shinmera@tymoon.eu>"
