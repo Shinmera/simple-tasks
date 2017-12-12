@@ -96,15 +96,8 @@ See QUEUE")
   
   (lock
    "The lock used to coordinate task scheduling with the runner.
-This is a recursive lock.
 
 See QUEUED-RUNNER")
-
-  (cloc
-   "The lock used to synchronise the condition variable.
-
-See QUEUED-RUNNER
-See BLOCKING-CALL-TASK")
   
   (cvar
    "The condition variable used to exchange signals.

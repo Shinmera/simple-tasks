@@ -67,7 +67,6 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 (defgeneric queue (runner))
 (defgeneric back-queue (runner))
 (defgeneric lock (object))
-(defgeneric cloc (object))
 (defgeneric cvar (object))
 (defgeneric thread (object))
 
@@ -75,14 +74,12 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   ((queue :initarg :queue :reader queue :writer %set-queue)
    (back-queue :initarg :back-queue :reader back-queue :writer %set-back-queue)
    (lock :initarg :lock :reader lock)
-   (cloc :initarg :cloc :reader cloc)
    (cvar :initarg :cvar :reader cvar)
    (thread :initarg :thread :reader thread :writer %set-thread))
   (:default-initargs
    :queue (make-array 100 :adjustable T :fill-pointer 0)
    :back-queue (make-array 100 :adjustable T :fill-pointer 0)
-   :lock #-:thread-support +no-threading-stump+ #+:thread-support (bt:make-recursive-lock "task-runner-queue-lock")
-   :cloc #-:thread-support +no-threading-stump+ #+:thread-support (bt:make-lock "task-runner-condition-lock")
+   :lock #-:thread-support +no-threading-stump+ #+:thread-support (bt:make-lock "task-runner-queue-lock")
    :cvar #-:thread-support +no-threading-stump+ #+:thread-support (bt:make-condition-variable :name "task-runner-condition")
    :thread #-:thread-support +no-threading-stump+ #+:thread-support NIL))
 
@@ -91,26 +88,26 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 (defmethod start-runner ((runner queued-runner))
   (%set-thread (bt:current-thread) runner)
   (let ((lock (lock runner))
-        (cloc (cloc runner))
         (cvar (cvar runner)))
     (unwind-protect
          (with-simple-restart (stop-runner "Stop the runner ~a entirely." runner)
            (with-simple-restart (abort "Stop the runner ~a entirely." runner)
+             (bt:acquire-lock lock)
              (loop while (eql (status runner) :running)
-                   do (bt:acquire-recursive-lock lock)
-                      (let ((*current-queue* (queue runner)))
+                   do (let ((*current-queue* (queue runner)))
                         (%set-queue (back-queue runner) runner)
                         (%set-back-queue *current-queue* runner)
                         (setf (fill-pointer (queue runner)) 0)
-                        (bt:release-recursive-lock lock)
+                        (bt:release-lock lock)
                         (loop for task across *current-queue*
                               do (let ((*current-task* task))
                                    (with-simple-restart (skip "Skip running ~a" task)
                                      (run-task task)))))
-                      (when (= 0 (length (queue runner)))
-                        (bt:with-lock-held (cloc)
-                          (bt:condition-wait cvar cloc))))))
-      (ignore-errors (bt:release-recursive-lock lock))
+                      (bt:acquire-lock lock)
+                      (loop while (= 0 (length (queue runner)))
+                            do (unless (bt:condition-wait cvar lock)
+                                 (bt:acquire-lock lock))))))
+      (ignore-errors (bt:release-lock lock))
       (%set-thread NIL runner)
       (setf (status runner) :stopped)))
   runner)
@@ -132,10 +129,9 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 #+:thread-support
 (defmethod schedule-task (task (runner queued-runner))
-  (bt:with-recursive-lock-held ((lock runner))
+  (bt:with-lock-held ((lock runner))
     (vector-push-extend task (queue runner)))
-  (bt:with-lock-held ((cloc runner))
-    (bt:condition-notify (cvar runner)))
+  (bt:condition-notify (cvar runner))
   task)
 
 #+:thread-support
@@ -151,7 +147,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                       do (setf (status task) :stopped)
                          (return (array-utils:vector-pop-position vector i)))))
          ;; Search runner queue, making sure we're locked while we do it.
-         (bt:with-recursive-lock-held ((lock runner))
+         (bt:with-lock-held ((lock runner))
            (clean-vector (queue runner)))
          ;; Search internal queue
          (when *current-queue*

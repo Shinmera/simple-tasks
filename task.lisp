@@ -92,10 +92,10 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
         (multiple-value-list (funcall (func task)))))
 
 (defclass notifying-task (task)
-  ((cloc :initarg :cloc :accessor cloc)
+  ((lock :initarg :lock :accessor lock)
    (cvar :initarg :cvar :accessor cvar))
   (:default-initargs
-   :cloc #-:thread-support +no-threading-stump+ #+:thread-support (bt:make-lock "notifying-task")
+   :lock #-:thread-support +no-threading-stump+ #+:thread-support (bt:make-lock "notifying-task")
    :cvar #-:thread-support +no-threading-stump+ #+:thread-support (bt:make-condition-variable :name "notifying-task")))
 
 #+:thread-support
@@ -104,14 +104,13 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
        (call-next-method)
     ;; Make sure we notify about our exit.
     (bt:thread-yield)
-    (bt:with-lock-held ((cloc task))
-      (bt:condition-notify (cvar task)))))
+    (bt:condition-notify (cvar task))))
 
 #+:thread-support
 (defmethod await ((task notifying-task) status)
   (loop until (status= task status)
-        do (bt:with-lock-held ((cloc task))
-             (bt:condition-wait (cvar task) (cloc task)))))
+        do (bt:with-lock-held ((lock task))
+             (bt:condition-wait (cvar task) (lock task)))))
 
 (defclass blocking-task (notifying-task)
   ())
