@@ -10,7 +10,9 @@
   :maintainer "Nicolas Hafner <shinmera@tymoon.eu>"
   :license "Artistic"
   :description "A very simple task scheduling framework."
-  :homepage "https://github.com/Shinmera/simple-tasks"
+  :homepage "https://Shinmera.github.io/simple-tasks/"
+  :bug-tracker "https://github.com/Shinmera/simple-tasks/issues"
+  :source-control (:git "https://github.com/Shinmera/simple-tasks.git")
   :serial T
   :components ((:file "package")
                (:file "toolkit")
