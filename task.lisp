@@ -46,8 +46,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   (when (task-ready-p task)
     (restart-case
         (handler-bind ((error (lambda (err)
-                                (setf (status task) :errored)
-                                (setf (error-environment task) (dissect:capture-environment err)))))
+                                (setf (error-environment task) (dissect:capture-environment err))
+                                (setf (status task) :errored))))
           (setf (status task) :running)
           (multiple-value-prog1
               (call-next-method)
