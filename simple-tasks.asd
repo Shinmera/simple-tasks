@@ -8,7 +8,7 @@
   :version "1.3.0"
   :author "Nicolas Hafner <shinmera@tymoon.eu>"
   :maintainer "Nicolas Hafner <shinmera@tymoon.eu>"
-  :license "Artistic"
+  :license "zlib"
   :description "A very simple task scheduling framework."
   :homepage "https://Shinmera.github.io/simple-tasks/"
   :bug-tracker "https://github.com/Shinmera/simple-tasks/issues"
